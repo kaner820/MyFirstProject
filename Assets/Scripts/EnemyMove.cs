@@ -7,12 +7,15 @@ public class EnemyMove : MonoBehaviour
     private Rigidbody2D rigid;
     private Animator anim;
     private SpriteRenderer spriteRenderer;
+    private CapsuleCollider2D collider;
+    
     public int nextMove;
     void Awake()
     {
         rigid = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+        collider = GetComponent<CapsuleCollider2D>();
         Invoke("Think", 5);
     }
     void FixedUpdate()
@@ -26,9 +29,7 @@ public class EnemyMove : MonoBehaviour
         RaycastHit2D rayHit = Physics2D.Raycast(frontVec, Vector3.down, 1, LayerMask.GetMask("Platform"));
         if (rayHit.collider == null)
         {
-            nextMove *= -1;
-            CancelInvoke();
-            Invoke("Think", 5);
+            Turn();
         }
     }
 
@@ -50,5 +51,33 @@ public class EnemyMove : MonoBehaviour
         //Recursive
         float nextThinkTime = Random.Range(2f, 5f);
         Invoke("Think", nextThinkTime);
+    }
+
+    void Turn()
+    {
+        nextMove *= -1;
+        spriteRenderer.flipX = nextMove == 1;
+        
+        CancelInvoke(); 
+        Invoke("Think",2);
+    }
+
+    public void OnDamaged()
+    {
+        //Sprite Alpha
+        spriteRenderer.color = new Color(1, 1, 1, 0.4f);
+        //Sprite Flip Y
+        spriteRenderer.flipY = true;
+        //Collider Disable
+        collider.enabled = false;
+        //Die Effect Jump
+        rigid.AddForce(Vector2.up * 5,ForceMode2D.Impulse);
+        //Destroy
+        Invoke("DeActive", 5);
+    }
+
+    void DeActive()
+    {
+        gameObject.SetActive(false);
     }
 }
